@@ -4,7 +4,6 @@ import PyKDL
 import numpy
 from PyKDL import Vector, Rotation, Frame
 from scipy.spatial.transform import Rotation as R
-from surgical_robotics_challenge.utils.utilities import cartesian_interpolate_step_num
 import numpy as np
 import time
 import rospy
@@ -14,8 +13,8 @@ from surgical_robotics_challenge.ecm_arm import ECM
 from surgical_robotics_challenge.simulation_manager import SimulationManager
 from surgical_robotics_challenge.utils.utilities import cartesian_interpolate_step
 from surgical_robotics_challenge.utils import coordinate_frames
-from surgical_robotics_challenge.kinematics.psmFK import *
-from surgical_robotics_challenge.kinematics.psmIK import *
+from surgical_robotics_challenge.kinematics.psmKinematics import PSMKinematicSolver
+# from surgical_robotics_challenge.kinematics.psmIK import *
 from surgical_robotics_challenge.utils.utilities import convert_mat_to_frame
 from surgical_robotics_challenge.utils.utilities import convert_frame_to_mat
 import os
@@ -23,6 +22,7 @@ import sys
 dynamic_path = os.path.abspath(__file__+"/../../")
 # print(dynamic_path)
 sys.path.append(dynamic_path)
+PI_2 = np.pi/2
 
 def pykdl_to_np(T_pykdl: Frame) -> np.matrix:
     rot_des = R.from_quat(T_pykdl.M.GetQuaternion()).as_matrix()
@@ -74,8 +74,10 @@ if __name__ == "__main__":
     cam.servo_jp([0.0, 0.05, -0.01, 0.0])
     time.sleep(0.2)
     psm1 = PSM(simulation_manager, "psm1", add_joint_errors=False)
+    # print(psm1.tool_id)
     time.sleep(0.2)
     psm2 = PSM(simulation_manager, "psm2", add_joint_errors=False)
+    # print(psm1.tool_id)
     time.sleep(0.2)
     needle = simulation_manager.get_obj_handle('Needle')
     time.sleep(0.2)
@@ -114,37 +116,36 @@ if __name__ == "__main__":
 
 
     # #### test pose info
-    psm2_tip = simulation_manager.get_obj_handle('psm2/toolyawlink')
-    # Sanity sleep
-    time.sleep(0.5)
-    T_tINw_test = psm2_tip.get_pose()
+    # psm2_tip = simulation_manager.get_obj_handle('psm2/toolyawlink')
+    # # Sanity sleep
+    # time.sleep(0.5)
+    # T_tINw_test = psm2_tip.get_pose()
 
 
-    # ### for psm 2
+    ### for psm 2
     # T_psm_w_b = psm2.get_T_b_w()  # from world to PSM base
     # T_psm_b_w = psm2.get_T_w_b()  # from PSM base to world
     # psm2_pose_cp = psm2.measured_cp()
     # psm2_pose = psm2.measured_jp()
     # psm2_pose.append(0.0)
-    # s1 = compute_FK(psm2_pose, 7) ### FK to the tool tip
+    # s1 = psm2._kd.compute_FK(psm2_pose, 7) ### FK to the tool tip
     # T_psm_tip = convert_mat_to_frame(s1)
-    # s2 = compute_FK(psm2_pose, 6) ### FK to the tool yaw link
+    # s2 = psm2._kd.compute_FK(psm2_pose, 6) ### FK to the tool yaw link
     # T_psm_yaw = convert_mat_to_frame(s2)
     #
     # T_offset_w = PyKDL.Frame(Rotation.RPY(np.pi, 0.0, 0),
     #                          Vector(0.0, 0.0, 0.0))
 
-    #### for psm 1
+    # #### for psm 1
     T_psm_w_b = psm1.get_T_b_w()  # from world to PSM base
     T_psm_b_w = psm1.get_T_w_b()  # from PSM base to world
     psm1_pose_cp = psm1.measured_cp()
     psm1_pose = psm1.measured_jp()
     psm1_pose.append(0.0)
-    s1 = compute_FK(psm1_pose, 7)  ### FK to the tool tip
+    s1 = psm1._kd.compute_FK(psm1_pose, 7)  ### FK to the tool tip
     T_psm_tip = convert_mat_to_frame(s1)
-    s2 = compute_FK(psm1_pose, 6)  ### FK to the tool yaw link
+    s2 = psm1._kd.compute_FK(psm1_pose, 6)  ### FK to the tool yaw link
     T_psm_yaw = convert_mat_to_frame(s2)
-
     T_offset_w = PyKDL.Frame(Rotation.RPY(np.pi, 0.0, 0),
                              Vector(0.0, 0.0, 0.0))
 
@@ -176,14 +177,14 @@ if __name__ == "__main__":
         T_tINw = T_cmd
         T_move = yaw_to_gripper(T_psm_b_w * T_cmd * T_offset_w.Inverse())
         # psm2.servo_cp(T_move)
-        # psm2.set_jaw_angle(0.7)
+        # psm2.set_jaw_angle(0.5)
         psm1.servo_cp(T_move)
-        psm1.set_jaw_angle(0.7)
+        psm1.set_jaw_angle(0.5)
         time.sleep(0.01)
     print("Done")
     time.sleep(0.5)
-    # psm2.set_jaw_angle(0.0)
-    psm1.set_jaw_angle(0.0)
+    psm2.set_jaw_angle(0.0)
+    # psm1.set_jaw_angle(0.0)
     time.sleep(0.5)
     #
     # print('Moved to the desired pose')
