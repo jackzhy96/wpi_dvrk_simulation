@@ -89,11 +89,11 @@ if __name__ == "__main__":
                  -1.0873261421084663, 0.7172512403887915, 0.48780102579228307]
 
     ## offset of PSM
-    offset_psm1 = PyKDL.Frame(Rotation.RPY(-np.pi / 2., np.pi*5/9, 0.),
-                              Vector(0.009973019361495972, -0.005215135216712952,  0.003237169608473778))
+    # offset_psm1 = PyKDL.Frame(Rotation.RPY(-np.pi / 2., np.pi*5/9, 0.),
+    #                           Vector(0.009973019361495972, -0.005215135216712952,  0.003237169608473778))
 
-    # offset_psm1 = PyKDL.Frame(Rotation.RPY(-np.pi / 2., 0., np.pi),
-    #                           Vector(-0.009973019361495972, -0.005215135216712952, 0.003237169608473778))
+    offset_psm1 = PyKDL.Frame(Rotation.RPY(-np.pi / 2., -np.pi*2/3, 0.),
+                              Vector(-0.009973019361495972, -0.005215135216712952, 0.003237169608473778))
 
     # offset_psm1_mtx = np.array([
     #     [0.94974, -0.177397, -0.257921, 0.00477713],
@@ -183,19 +183,19 @@ if __name__ == "__main__":
         time.sleep(0.01)
     print("Done")
     time.sleep(0.5)
-    psm2.set_jaw_angle(0.0)
-    # psm1.set_jaw_angle(0.0)
+    # psm2.set_jaw_angle(0.0)
+    psm1.set_jaw_angle(0.0)
     time.sleep(0.5)
     #
-    # print('Moved to the desired pose')
-    #
-    # print('Close the jaw')
-    # for i in range(30):
-    #     psm2.set_jaw_angle(0.0)
-    #     time.sleep(0.01)
-    # time.sleep(0.5)
-    # print('Release the needle')
-    # time.sleep(2.0)
+    print('Moved to the desired pose')
+    
+    print('Close the jaw')
+    for i in range(30):
+        psm1.set_jaw_angle(0.0)
+        time.sleep(0.01)
+    time.sleep(0.5)
+    print('Release the needle')
+    time.sleep(2.0)
     # # Open the jaws if required
     # psm2.set_jaw_angle(0.7)
     # time.sleep(2.0)
