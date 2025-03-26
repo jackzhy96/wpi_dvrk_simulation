@@ -64,9 +64,9 @@ def get_released(key):
 
 if __name__ == '__main__':
     key_d = False
-    # exp_name = 'simple'
+    exp_name = 'simple'
     # exp_name = '3d_complex'
-    exp_name = '3d_straight'
+    # exp_name = '3d_straight'
     rosbag_folder = os.path.join(dynamic_path, 'record_bags')
     rosbag_name = os.path.join(rosbag_folder, f'test_{exp_name}.bag')
     print('The name of the rosbag is: \n', rosbag_name)
@@ -100,12 +100,12 @@ if __name__ == '__main__':
     prev_pos = None
     prev_ori = None
     prev_time = None
-    for topic, msg, t in bag.read_messages(topics='/ambf/env/Needle/State'):
+    for topic, msg, t in bag.read_messages(topics='/ambf/env/phantom/Needle/State'):
         # test_msg = msg
         needle_pose_temp = needle_msg_to_frame(msg)
         needle_pose.append(needle_pose_temp)
         count += 1
-        cur_pos = np.array([msg.pose.position.x * 0.1, msg.pose.position.y * 0.1, msg.pose.position.z * 0.1])
+        cur_pos = np.array([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
         cur_ori = np.array([msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z,
                             msg.pose.orientation.w])
         cur_time = t.secs + 1e-9 * t.nsecs
@@ -178,7 +178,7 @@ if __name__ == '__main__':
     time.sleep(0.5)
     psm2 = PSM(simulation_manager, 'psm2', add_joint_errors=False)
     time.sleep(0.5)
-    needle = simulation_manager.get_obj_handle('Needle')
+    needle = simulation_manager.get_obj_handle('/phantom/Needle')
     time.sleep(1.0)
 
     needle_pose_list = []
