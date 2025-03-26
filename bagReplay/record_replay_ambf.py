@@ -2,6 +2,8 @@ import time
 import os
 import sys
 from glob import glob
+
+import geometry_msgs
 import rosbag
 import gc
 import numpy as np
@@ -9,6 +11,8 @@ import numpy as np
 from surgical_robotics_challenge.psm_arm import PSM
 from surgical_robotics_challenge.ecm_arm import ECM
 from surgical_robotics_challenge.simulation_manager import SimulationManager
+from surgical_robotics_challenge.utils.utilities import get_input_in_range
+
 from surgical_robotics_challenge.utils import coordinate_frames
 dynamic_path = os.path.abspath(__file__ + "/../../")
 # data_path = os.path.abspath(__file__+"/../../../../")
@@ -17,8 +21,6 @@ sys.path.append(dynamic_path)
 from surgical_robotics_challenge.utils.utilities import convert_mat_to_frame
 from surgical_robotics_challenge.utils.utilities import convert_frame_to_mat
 from scipy.spatial.transform import Rotation as R
-# from sklearn import preprocessing
-# from ros_numpy import numpify
 import pickle
 # import dtw
 
@@ -35,29 +37,24 @@ def needle_msg_to_mtx(msg):
 
 
 def gripper_msg_to_jaw(msg):
-    min = -0.1
-    max = 0.51
-    jaw_angle = msg.position[0] + min / (max - min)
+    '''
+    Map the MTM input to the gripper
+    '''
+    min = -0.698  # ~ -40 deg
+    max = 1.047  # ~60 deg
+    input_val = get_input_in_range(msg.position[0], min, max)
+    jaw_angle = (input_val - min) / (max - min)
     return jaw_angle
 
-if __name__ == '__main__':
-    # data_folder = os.path.join(dynamic_path, "Data", 'grasping')
-    # exp_name = '3dmed'  # 3dmed
-    # # exp_name = 'oldphantom' # 2021 phantom
-    #
-    # rosbag_name = os.path.join(data_folder, f'grasp_{exp_name}.bag')
 
-    user_id = 10
-    # exp_name = '3dmed'
-    exp_name = 'oldphantom'
-    rosbag_folder = os.path.join(dynamic_path, 'Data', f'user_{str(user_id)}')
+if __name__ == '__main__':
+    exp_name = 'simple'
+    # exp_name = '3d_complex'
+    # exp_name = '3d_straight'
+    rosbag_folder = os.path.join(dynamic_path, 'record_bags')
     rosbag_name = os.path.join(rosbag_folder, f'test_{exp_name}.bag')
 
     print(rosbag_name)
-    # rosbag_name = file_list[3]  ## phantom_old_shang_01.bag
-    # if not os.path.exists(output_folder):
-    #     print('Create Output Folder')
-    #     os.makedirs(output_folder)
 
     bag = rosbag.Bag(rosbag_name)
     topics = list(bag.get_type_and_topic_info()[1].keys())
@@ -78,63 +75,11 @@ if __name__ == '__main__':
     ecm_pos = []
     needle_pos = []
 
-    # ### new bag replay
-    # for topic, msg, t in bag.read_messages(topics=topics[20]):
-    #     assert topic == '/psm1/setpoint_js', 'load incorrect topics for psm 1 jp'
-    #     # psm1_pos_temp = msg.joint_positions[0:6]
-    #     psm1_pos_temp = list(msg.data)
-    #     psm1_pos.append(psm1_pos_temp)
-    #     count += 1
-    # print('psm 1 record count: ', count)
-    # count = 0
-    #
-    # for topic, msg, t in bag.read_messages(topics=topics[19]):
-    #     assert topic == '/psm1/jaw/setpoint_js', 'load incorrect topics for psm 1 jaw'
-    #     psm1_jaw_temp = msg.data
-    #     psm1_jaw.append(psm1_jaw_temp)
-    #     count += 1
-    # print('psm 1 jaw record count: ', count)
-    # count = 0
-    #
-    # for topic, msg, t in bag.read_messages(topics=topics[22]):
-    #     assert topic == '/psm2/setpoint_js', 'load incorrect topics for psm 2 jp'
-    #     # psm1_pos_temp = msg.joint_positions[0:6]
-    #     psm2_pos_temp = list(msg.data)
-    #     psm2_pos.append(psm2_pos_temp)
-    #     count += 1
-    # print('psm 2 record count: ', count)
-    # count = 0
-    #
-    # for topic, msg, t in bag.read_messages(topics=topics[21]):
-    #     assert topic == '/psm2/jaw/setpoint_js', 'load incorrect topics for psm 2 jaw'
-    #     psm2_jaw_temp = msg.data
-    #     psm2_jaw.append(psm2_jaw_temp)
-    #     count += 1
-    # print('psm 2 jaw record count: ', count)
-    # count = 0
-    #
-    # for topic, msg, t in bag.read_messages(topics=topics[18]):
-    #     assert topic == '/ecm/setpoint_js', 'load incorrect topics for ecm jp'
-    #     ecm_pos_temp = msg.data
-    #     ecm_pos.append(ecm_pos_temp)
-    #     count += 1
-    # print('ecm record count: ', count)
-    # count = 0
-
-    # for topic, msg, t in bag.read_messages(topics=topics[9]):
-    #     assert topic == '/ambf/env/Needle/State', 'load incorrect topics for needle'
-    #     needle_pos_temp = needle_msg_to_mtx(msg)
-    #     needle_pos.append(needle_pos_temp)
-    #     count += 1
-    # print('needle record count: ', count)
-    # count = 0
-
     ## ambf raw replay
-    for topic, msg, t in bag.read_messages(topics=topics[14]):
-        assert topic == '/ambf/env/psm1/baselink/State', 'load incorrect topics'
+    for topic, msg, t in bag.read_messages(topics='/ambf/env/psm1/baselink/State'):
         psm1_pos_temp = [msg.joint_positions[0],
                          msg.joint_positions[1],
-                         msg.joint_positions[2] / 10.,
+                         msg.joint_positions[2],
                          msg.joint_positions[3],
                          msg.joint_positions[4],
                          msg.joint_positions[5]]
@@ -144,11 +89,10 @@ if __name__ == '__main__':
     print('psm1 ambf record count: ', count)
     count = 0
 
-    for topic, msg, t in bag.read_messages(topics=topics[16]):
-        assert topic == '/ambf/env/psm2/baselink/State', 'load incorrect topics'
+    for topic, msg, t in bag.read_messages(topics='/ambf/env/psm2/baselink/State'):
         psm2_pos_temp = [msg.joint_positions[0],
                          msg.joint_positions[1],
-                         msg.joint_positions[2] / 10.,
+                         msg.joint_positions[2],
                          msg.joint_positions[3],
                          msg.joint_positions[4],
                          msg.joint_positions[5]]
@@ -158,27 +102,20 @@ if __name__ == '__main__':
     print('psm2 ambf record count: ', count)
     count = 0
 
-    for topic, msg, t in bag.read_messages(topics=topics[0]):
-        assert topic == '/MTML/gripper/measured_js', 'load incorrect topics'
+    for topic, msg, t in bag.read_messages(topics='/MTML/gripper/measured_js'):
         psm1_jaw_ambf_temp = gripper_msg_to_jaw(msg)
         psm1_jaw_ambf.append(psm1_jaw_ambf_temp)
         count += 1
     print('MTML gripper record count: ', count)
     count = 0
 
-    for topic, msg, t in bag.read_messages(topics=topics[1]):
-        assert topic == '/MTMR/gripper/measured_js', 'load incorrect topics'
+    for topic, msg, t in bag.read_messages(topics='/MTMR/gripper/measured_js'):
         psm2_jaw_ambf_temp = gripper_msg_to_jaw(msg)
         psm2_jaw_ambf.append(psm2_jaw_ambf_temp)
         count += 1
     print('MTMR gripper record count: ', count)
     count = 0
     gc.collect()
-
-    # dtw_align = dtw.dtw(psm1_pos_ambf,psm1_pos) ### (query, reference)
-
-    # test_path_q = dtw.warp(dtw_align, index_reference=False)
-    # test_path_r = dtw.warp(dtw_align, index_reference=True)
 
     simulation_manager = SimulationManager('record_test')
     time.sleep(0.5)
@@ -187,34 +124,14 @@ if __name__ == '__main__':
     w.reset_bodies()
     time.sleep(0.2)
     cam = ECM(simulation_manager, 'CameraFrame')
-    cam.servo_jp([0.0, 0.05, -0.01, 0.0])
+    # cam.servo_jp([0.0, 0.05, -0.01, 0.0])
     time.sleep(0.5)
     psm1 = PSM(simulation_manager, 'psm1', add_joint_errors=False)
     time.sleep(0.5)
-    # if psm1.is_present():
-    #     print('psm1 run')
-    #     T_psmtip_c = coordinate_frames.PSM1.T_tip_cam
-    #     T_psmtip_b = psm1.get_T_w_b() * cam.get_T_c_w() * T_psmtip_c
-    #     psm1.set_home_pose(T_psmtip_b)
-    #     time.sleep(1.0)
     psm2 = PSM(simulation_manager, 'psm2', add_joint_errors=False)
     time.sleep(0.5)
-    # if psm2.is_present():
-    #     print('psm2 run')
-    #     T_psmtip_c = coordinate_frames.PSM2.T_tip_cam
-    #     T_psmtip_b = psm2.get_T_w_b() * cam.get_T_c_w() * T_psmtip_c
-    #     psm2.set_home_pose(T_psmtip_b)
-    #     time.sleep(1.0)
     needle = simulation_manager.get_obj_handle('Needle')
     time.sleep(0.2)
-
-    # assert len(psm1_pos) == len(psm2_pos), 'psm1 and psm2 run time not equal'
-    #
-    # cam.servo_jp(ecm_pos[0])
-    ### Add needle attachment code
-    # needle = simulation_manager.get_obj_handle('Needle')
-    # link1 = simulation_manager.get_obj_handle('psm1' + '/toolyawlink')
-    # link2 = simulation_manager.get_obj_handle('psm2' + '/toolyawlink')
 
     # atn = AttachNeedle(needle, link1, link2)
 
@@ -245,43 +162,3 @@ if __name__ == '__main__':
 
     print('Done')
 
-    # save_folder = os.path.join(dynamic_path, 'output', 'test_replay')
-    #
-    # if not os.path.exists(save_folder):
-    #     print('Create Save Folder')
-    #     os.makedirs(save_folder)
-    #
-    # save_file = os.path.join(save_folder, 'test_needle_1.pkl')
-    #
-    # with open(save_file, 'wb') as f:
-    #     pickle.dump(needle_pose_list, f)
-    #
-    # print('Needle list saved')
-
-    # # First we shall move the PSM to its initial pose using joint commands OR pose command
-    # psm2.servo_jp([-0.4, -0.22, 0.139, -1.64, -0.37, -0.11])
-    # # Open the Jaws
-    # psm2.set_jaw_angle(0.8)
-    # # Sleep to achieve the target pose and jaw angle
-    # time.sleep(1.0)
-    # # Instantiate the needle initialization class
-    # needle = NeedleInitialization(simulation_manager)
-    # psm2_tip = simulation_manager.get_obj_handle('psm2/toolyawlink')
-    # # Sanity sleep
-    # time.sleep(0.5)
-    # # This method will automatically start moving the needle to be with the PSM2's jaws
-    # needle.move_to(psm2_tip)
-    # time.sleep(0.5)
-    # for i in range(30):
-    #    # Close the jaws to grasp the needle
-    #    # Calling it repeatedly a few times so that the needle is forced
-    #    # between the gripper tips and grasped properly
-    #    psm2.set_jaw_angle(0.0)
-    #    time.sleep(0.01)
-    # time.sleep(0.5)
-    # # Don't forget to release the needle control loop to move it freely.
-    # needle.release()
-    # time.sleep(2.0)
-    # # Open the jaws to let go of the needle from grasp
-    # psm2.set_jaw_angle(0.8)
-    # time.sleep(2.0)

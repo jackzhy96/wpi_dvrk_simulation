@@ -1,6 +1,6 @@
 <launch>
     <node pkg="rosbag" type="record" name="recorder" output="screen" 
-            args="-o    /home/hzhou62/wpi_dvrk_simulation/record_bags/test.bag
+            args="-o    <path of wpi_dvrk_simulation GitHub repository>/record_bags/test.bag
                   -b    4096
                         /ambf/env/Entry1/State
                         /ambf/env/Entry2/State
@@ -13,7 +13,7 @@
                         /ambf/env/CameraFrame/State
                         /ambf/env/cameras/cameraL/State
                         /ambf/env/cameras/cameraR/State
-                        /ambf/env/Needle/State
+                        /ambf/env/phantom/Needle/State
                         /ecm/setpoint_js
                         /psm1/setpoint_js
                         /psm2/setpoint_js

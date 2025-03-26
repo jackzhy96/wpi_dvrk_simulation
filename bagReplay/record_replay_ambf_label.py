@@ -15,6 +15,7 @@ dynamic_path = os.path.abspath(__file__ + "/../../")
 sys.path.append(dynamic_path)
 from surgical_robotics_challenge.utils.utilities import convert_mat_to_frame
 from surgical_robotics_challenge.utils.utilities import convert_frame_to_mat
+from surgical_robotics_challenge.utils.utilities import get_input_in_range
 from scipy.spatial.transform import Rotation as R
 import pickle
 # import dtw
@@ -42,9 +43,13 @@ def needle_msg_to_frame(msg):
 
 
 def gripper_msg_to_jaw(msg):
-    min = -0.1
-    max = 0.51
-    jaw_angle = msg.position[0] + min / (max - min)
+    '''
+    Map the MTM input to the gripper
+    '''
+    min = -0.698  # ~ -40 deg
+    max = 1.047  # ~60 deg
+    input_val = get_input_in_range(msg.position[0], min, max)
+    jaw_angle = (input_val - min) / (max - min)
     return jaw_angle
 
 def get_pressed(event):
@@ -59,15 +64,11 @@ def get_released(key):
 
 if __name__ == '__main__':
     key_d = False
-    data_folder = os.path.join(dynamic_path, "Data")  ## add rosbags here!
-    file_list = glob(os.path.join(data_folder, "*.bag"))
-
-    user_id = 10 # (0-9)
-
-    # exp_name = '3dmed' # 3dmed
-    exp_name = 'oldphantom' # 2021 phantom
-
-    rosbag_name = os.path.join(data_folder, f'user_{str(user_id)}' ,f'test_{exp_name}.bag')
+    # exp_name = 'simple'
+    # exp_name = '3d_complex'
+    exp_name = '3d_straight'
+    rosbag_folder = os.path.join(dynamic_path, 'record_bags')
+    rosbag_name = os.path.join(rosbag_folder, f'test_{exp_name}.bag')
     print('The name of the rosbag is: \n', rosbag_name)
 
     # if not os.path.exists(output_folder):
@@ -99,8 +100,7 @@ if __name__ == '__main__':
     prev_pos = None
     prev_ori = None
     prev_time = None
-    for topic, msg, t in bag.read_messages(topics=topics[11]):
-        assert topic == '/ambf/env/Needle/State', 'load incorrect topics for needle'
+    for topic, msg, t in bag.read_messages(topics='/ambf/env/Needle/State'):
         # test_msg = msg
         needle_pose_temp = needle_msg_to_frame(msg)
         needle_pose.append(needle_pose_temp)
@@ -124,8 +124,7 @@ if __name__ == '__main__':
     count = 0
 
     ## ambf raw replay
-    for topic, msg, t in bag.read_messages(topics=topics[14]):
-        assert topic == '/ambf/env/psm1/baselink/State', 'load incorrect topics'
+    for topic, msg, t in bag.read_messages(topics='/ambf/env/psm1/baselink/State'):
         psm1_pos_temp = [msg.joint_positions[0],
                          msg.joint_positions[1],
                          msg.joint_positions[2] / 10.,
@@ -138,8 +137,7 @@ if __name__ == '__main__':
     print('psm1 ambf record count: ', count)
     count = 0
 
-    for topic, msg, t in bag.read_messages(topics=topics[16]):
-        assert topic == '/ambf/env/psm2/baselink/State', 'load incorrect topics'
+    for topic, msg, t in bag.read_messages(topics='/ambf/env/psm2/baselink/State'):
         psm2_pos_temp = [msg.joint_positions[0],
                          msg.joint_positions[1],
                          msg.joint_positions[2] / 10.,
@@ -152,27 +150,20 @@ if __name__ == '__main__':
     print('psm2 ambf record count: ', count)
     count = 0
 
-    for topic, msg, t in bag.read_messages(topics=topics[0]):
-        assert topic == '/MTML/gripper/measured_js', 'load incorrect topics'
+    for topic, msg, t in bag.read_messages(topics='/MTML/gripper/measured_js'):
         psm1_jaw_ambf_temp = gripper_msg_to_jaw(msg)
         psm1_jaw_ambf.append(psm1_jaw_ambf_temp)
         count += 1
     print('MTML gripper record count: ', count)
     count = 0
 
-    for topic, msg, t in bag.read_messages(topics=topics[1]):
-        assert topic == '/MTMR/gripper/measured_js', 'load incorrect topics'
+    for topic, msg, t in bag.read_messages(topics='/MTMR/gripper/measured_js'):
         psm2_jaw_ambf_temp = gripper_msg_to_jaw(msg)
         psm2_jaw_ambf.append(psm2_jaw_ambf_temp)
         count += 1
     print('MTMR gripper record count: ', count)
     count = 0
     gc.collect()
-
-    # dtw_align = dtw.dtw(psm1_pos_ambf,psm1_pos) ### (query, reference)
-
-    # test_path_q = dtw.warp(dtw_align, index_reference=False)
-    # test_path_r = dtw.warp(dtw_align, index_reference=True)
 
     simulation_manager = SimulationManager('record_test')
     time.sleep(0.5)
@@ -181,7 +172,7 @@ if __name__ == '__main__':
     w.reset_bodies()
     time.sleep(0.2)
     cam = ECM(simulation_manager, 'CameraFrame')
-    cam.servo_jp([0.0, 0.05, -0.01, 0.0])
+    # cam.servo_jp([0.0, 0.05, -0.01, 0.0])
     time.sleep(0.5)
     psm1 = PSM(simulation_manager, 'psm1', add_joint_errors=False)
     time.sleep(0.5)
@@ -220,7 +211,7 @@ if __name__ == '__main__':
     save_action = False
 
     if save_action:
-        save_folder = os.path.join(dynamic_path, 'output', 'data_replay', f'user_{str(user_id)}')
+        save_folder = os.path.join(dynamic_path, 'output', 'data_replay', f'test_{exp_name}')
 
         if not os.path.exists(save_folder):
             print('Create Save Folder')
