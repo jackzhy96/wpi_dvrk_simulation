@@ -29,7 +29,7 @@ def needle_msg_to_mtx(msg):
     ori_q = np.array([pose_info.orientation.x, pose_info.orientation.y, pose_info.orientation.z, pose_info.orientation.w])
     mtx = np.eye(4)
     rot = R.from_quat(ori_q)
-    mtx[0:3, 3] = pos * 0.1
+    mtx[0:3, 3] = pos
     mtx[0:3, 0:3] = rot.as_matrix()
     return mtx
 
@@ -38,7 +38,7 @@ def needle_msg_to_frame(msg):
     pose_info = msg.pose
     frame = Frame(Rotation.Quaternion(pose_info.orientation.x, pose_info.orientation.y, pose_info.orientation.z,
                                       pose_info.orientation.w),
-                  Vector(pose_info.position.x * 0.1, pose_info.position.y * 0.1, pose_info.position.z * 0.1))
+                  Vector(pose_info.position.x, pose_info.position.y, pose_info.position.z))
     return frame
 
 
