@@ -119,6 +119,10 @@ cd ~/surgical_robotics_challenge
 ./run_env_3D_MED_STRAIGHT_LND_420006.sh
 ```
 
+**Important: Click the AMBF interface and press `2` in your keyboard.**
+
+It will pop out that the gravity is OFF. Then you can move to the next step.
+
 In another new terminal, run:
 
 ```bash
