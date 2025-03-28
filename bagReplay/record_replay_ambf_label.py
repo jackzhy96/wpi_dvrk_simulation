@@ -64,12 +64,13 @@ def get_released(key):
 
 if __name__ == '__main__':
     key_d = False
-    exp_name = 'simple'
-    # exp_name = '3d_complex'
+    pre_fix = 'test'
+    # pre_fix = 'alternative'
+    exp_name = '3d_complex'
     # exp_name = '3d_straight'
+    # exp_name = '3d_complex_gravity'
     rosbag_folder = os.path.join(dynamic_path, 'record_bags')
-    rosbag_name = os.path.join(rosbag_folder, f'test_{exp_name}.bag')
-    print('The name of the rosbag is: \n', rosbag_name)
+    rosbag_name = os.path.join(rosbag_folder, f'{pre_fix}_{exp_name}.bag')
 
     # if not os.path.exists(output_folder):
     #     print('Create Output Folder')
