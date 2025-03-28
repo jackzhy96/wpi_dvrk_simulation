@@ -116,12 +116,12 @@ In a new terminal, run:
 
 ```bash
 cd ~/surgical_robotics_challenge
-./run_env_SIMPLE_LND_420006.sh
+./run_env_3D_MED_STRAIGHT_LND_420006.sh
 ```
 
 In another new terminal, run:
 
 ```bash
 cd ~/wpi_dvrk_simulation/bagReplay
-python3 grasp_needle.py
+python3 record_replay_needle_ambf.py
 ```
