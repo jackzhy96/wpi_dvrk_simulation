@@ -60,3 +60,68 @@ pip3 install -e .
 
 # Run Demonstrations
 
+Firstly, clone the repository:
+
+```bash
+cd ~
+git clone https://github.com/jackzhy96/wpi_dvrk_simulation.git
+```
+
+
+Then, enable ROS, open a terminal and run:
+
+```bash
+roscore
+```
+
+## Grasp Needle
+
+In a new terminal, run:
+
+```bash
+cd ~/surgical_robotics_challenge
+./run_env_SIMPLE_LND_420006.sh
+```
+
+In another new terminal, run:
+
+```bash
+cd ~/wpi_dvrk_simulation/bagReplay
+python3 grasp_needle.py
+```
+
+This script will let the left Patient Side Manipulator (PSM 1) to grasp the needle.
+
+## Run Recording
+
+### With PSM
+
+In a new terminal, run:
+
+```bash
+cd ~/surgical_robotics_challenge
+run_env_3D_MED_COMPLEX_LND_420006.sh
+```
+
+In another new terminal, run:
+
+```bash
+cd ~/wpi_dvrk_simulation/bagReplay
+python3 record_replay_ambf.py
+```
+
+### Needle Only
+
+In a new terminal, run:
+
+```bash
+cd ~/surgical_robotics_challenge
+./run_env_SIMPLE_LND_420006.sh
+```
+
+In another new terminal, run:
+
+```bash
+cd ~/wpi_dvrk_simulation/bagReplay
+python3 grasp_needle.py
+```
