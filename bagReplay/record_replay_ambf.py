@@ -31,7 +31,7 @@ def needle_msg_to_mtx(msg):
     ori_q = np.array([pose_info.orientation.x, pose_info.orientation.y, pose_info.orientation.z, pose_info.orientation.w])
     mtx = np.eye(4)
     rot = R.from_quat(ori_q)
-    mtx[0:3, 3] = pos * 0.1
+    mtx[0:3, 3] = pos
     mtx[0:3, 0:3] = rot.as_matrix()
     return mtx
 
@@ -61,15 +61,10 @@ if __name__ == '__main__':
     types = [val[0] for val in bag.get_type_and_topic_info()[1].values()]
 
     count = 0
-    topics_name = []
-    psm1_pos = []
-    psm2_pos = []
     psm1_pos_ambf = []
     psm2_pos_ambf = []
     t_psm1 = []
     t_psm2 = []
-    psm1_jaw = []
-    psm2_jaw = []
     psm1_jaw_ambf = []
     psm2_jaw_ambf = []
     ecm_pos = []
@@ -132,8 +127,6 @@ if __name__ == '__main__':
     time.sleep(0.5)
     needle = simulation_manager.get_obj_handle('Needle')
     time.sleep(0.2)
-
-    # atn = AttachNeedle(needle, link1, link2)
 
     needle_pose_list = []
 

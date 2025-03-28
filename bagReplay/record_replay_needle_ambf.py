@@ -18,8 +18,6 @@ from surgical_robotics_challenge.utils.utilities import convert_frame_to_mat
 from surgical_robotics_challenge.utils.utilities import get_input_in_range
 from scipy.spatial.transform import Rotation as R
 import pickle
-# import dtw
-from pynput.keyboard import Listener, Key, KeyCode
 from PyKDL import Frame, Rotation, Vector
 import json
 
@@ -52,18 +50,7 @@ def gripper_msg_to_jaw(msg):
     jaw_angle = (input_val - min) / (max - min)
     return jaw_angle
 
-def get_pressed(event):
-    global key_d
-    if event == KeyCode.from_char('d'):
-        key_d = True
-
-def get_released(key):
-    if key == Key.esc:
-        print('stop listener')
-        return False
-
 if __name__ == '__main__':
-    key_d = False
     exp_name = 'simple'
     # exp_name = '3d_complex'
     # exp_name = '3d_straight'
@@ -80,28 +67,18 @@ if __name__ == '__main__':
     types = [val[0] for val in bag.get_type_and_topic_info()[1].values()]
 
     count = 0
-    psm1_pos = []
-    psm2_pos = []
-    psm1_pos_ambf = []
-    psm2_pos_ambf = []
-    t_psm1 = []
-    t_psm2 = []
-    psm1_jaw = []
-    psm2_jaw = []
-    psm1_jaw_ambf = []
-    psm2_jaw_ambf = []
     ecm_pos = []
     needle_pose = []
     index_list = []
 
     needle_v = []
     needle_w = []
+
     ### needle test replay
     prev_pos = None
     prev_ori = None
     prev_time = None
     for topic, msg, t in bag.read_messages(topics='/ambf/env/phantom/Needle/State'):
-        # test_msg = msg
         needle_pose_temp = needle_msg_to_frame(msg)
         needle_pose.append(needle_pose_temp)
         count += 1
@@ -123,46 +100,6 @@ if __name__ == '__main__':
     print('needle record count: ', count)
     count = 0
 
-    ## ambf raw replay
-    for topic, msg, t in bag.read_messages(topics='/ambf/env/psm1/baselink/State'):
-        psm1_pos_temp = [msg.joint_positions[0],
-                         msg.joint_positions[1],
-                         msg.joint_positions[2],
-                         msg.joint_positions[3],
-                         msg.joint_positions[4],
-                         msg.joint_positions[5]]
-        psm1_pos_ambf.append(psm1_pos_temp)
-        t_psm1.append(t)
-        count += 1
-    print('psm1 ambf record count: ', count)
-    count = 0
-
-    for topic, msg, t in bag.read_messages(topics='/ambf/env/psm2/baselink/State'):
-        psm2_pos_temp = [msg.joint_positions[0],
-                         msg.joint_positions[1],
-                         msg.joint_positions[2],
-                         msg.joint_positions[3],
-                         msg.joint_positions[4],
-                         msg.joint_positions[5]]
-        psm2_pos_ambf.append(psm2_pos_temp)
-        t_psm2.append(t)
-        count += 1
-    print('psm2 ambf record count: ', count)
-    count = 0
-
-    for topic, msg, t in bag.read_messages(topics='/MTML/gripper/measured_js'):
-        psm1_jaw_ambf_temp = gripper_msg_to_jaw(msg)
-        psm1_jaw_ambf.append(psm1_jaw_ambf_temp)
-        count += 1
-    print('MTML gripper record count: ', count)
-    count = 0
-
-    for topic, msg, t in bag.read_messages(topics='/MTMR/gripper/measured_js'):
-        psm2_jaw_ambf_temp = gripper_msg_to_jaw(msg)
-        psm2_jaw_ambf.append(psm2_jaw_ambf_temp)
-        count += 1
-    print('MTMR gripper record count: ', count)
-    count = 0
     gc.collect()
 
     simulation_manager = SimulationManager('record_test')
@@ -174,20 +111,13 @@ if __name__ == '__main__':
     cam = ECM(simulation_manager, 'CameraFrame')
     # cam.servo_jp([0.0, 0.05, -0.01, 0.0])
     time.sleep(0.5)
-    psm1 = PSM(simulation_manager, 'psm1', add_joint_errors=False)
-    time.sleep(0.5)
-    psm2 = PSM(simulation_manager, 'psm2', add_joint_errors=False)
-    time.sleep(0.5)
     needle = simulation_manager.get_obj_handle('/phantom/Needle')
-    time.sleep(1.0)
+    time.sleep(0.5)
 
     needle_pose_list = []
 
-    total_num = min(len(psm1_pos_ambf), len(psm2_pos_ambf), len(psm1_jaw_ambf), len(psm2_jaw_ambf), len(needle_pose))
-    # total_num = min(len(psm1_pos), len(psm2_pos), len(psm1_jaw), len(psm2_jaw))
+    total_num = len(needle_pose)
     print('Total number of elements : ', total_num)
-    listener = Listener(on_press=get_pressed)
-    listener.start()
 
     for i in range(total_num):
         # needle.set_force(Vector(0, 0, 0))
@@ -196,15 +126,9 @@ if __name__ == '__main__':
 
         time.sleep(0.01)
 
-        if key_d:
-            index_list.append(count)
-            print('\n The index is', count)
         count += 1
         sys.stdout.write(f'\r Running progress {count}/{total_num}')
         sys.stdout.flush()
-        key_d = False
-    listener.stop()
-    listener.join()
     print('Done')
 
     # save_action = True
