@@ -100,7 +100,7 @@ In a new terminal, run:
 
 ```bash
 cd ~/surgical_robotics_challenge
-run_env_3D_MED_COMPLEX_LND_420006.sh
+./run_env_3D_MED_COMPLEX_LND_420006.sh
 ```
 
 In another new terminal, run:
@@ -124,4 +124,36 @@ In another new terminal, run:
 ```bash
 cd ~/wpi_dvrk_simulation/bagReplay
 python3 record_replay_needle_ambf.py
+```
+
+## Optional: Recording
+
+**You need to run dVRK to enable the Master Tool Manipulators Firstly**
+
+Minor modifications may be required to achieve desired performance.
+
+### Run a simulation environment
+
+For example, use the complex 3D MED suturing training phantom. In a new terminal, run:
+
+```bash
+cd ~/surgical_robotics_challenge
+./run_env_3D_MED_COMPLEX_LND_420006.sh
+```
+
+### Run Teleoperation
+
+In a new terminal, run:
+
+```bash
+cd ~/surgical_robotics_challenge/scripts/surgical_robotics_challenge/teleoperation
+./mtm_psm_pair_teleop_420006.sh
+```
+
+### Run recording
+
+In another new terminal, run: 
+```bash
+cd ~/wpi_dvrk_simulation/bagRecord/launch
+roslaunch simple_rawdata_recorder.launch
 ```
