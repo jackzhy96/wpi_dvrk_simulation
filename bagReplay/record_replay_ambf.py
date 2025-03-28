@@ -48,11 +48,13 @@ def gripper_msg_to_jaw(msg):
 
 
 if __name__ == '__main__':
-    exp_name = 'simple'
+    # pre_fix = 'test'
+    pre_fix = 'alternative'
     # exp_name = '3d_complex'
     # exp_name = '3d_straight'
+    exp_name = '3d_complex_gravity'
     rosbag_folder = os.path.join(dynamic_path, 'record_bags')
-    rosbag_name = os.path.join(rosbag_folder, f'test_{exp_name}.bag')
+    rosbag_name = os.path.join(rosbag_folder, f'{pre_fix}_{exp_name}.bag')
 
     print(rosbag_name)
 
