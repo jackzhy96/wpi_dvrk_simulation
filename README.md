@@ -1,2 +1,62 @@
-# wpi_dvrk_simulation
-dVRK simulation operations for WPI RBE 580
+# dVRK simulation operations for WPI RBE 580
+
+# Pre-Requirement And Installation
+
+**Make sure you have a system with Ubuntu 20.04 and ROS Noetic installed.**
+
+**Note**: The installation is path-sensitive. If you have enough knowledge about Linux system and path setup. 
+You don't have to follow the procedure but please make suer your path dependence is correct.
+
+## Install AMBF (Asynchronous Multi-Body Framework) Simulator:
+
+### [AMBF](https://github.com/WPI-AIM/ambf)
+
+To install AMBF, you may need some dependencies:
+
+```bash
+sudo apt install libasound2-dev libgl1-mesa-dev xorg-dev
+```
+
+### Installation and Compile
+
+```bash
+cd ~
+git clone https://github.com/WPI-AIM/ambf.git
+cd ambf && mkdir build
+cd build
+cmake ..
+make
+```
+
+### Setup Environment Parameters
+
+```bash
+echo "source ~/ambf/build/devel/setup.bash" >> ~/.bashrc
+```
+
+**Optional** Create an Alias
+
+In your `~/.bashrc` file, add the following line (assume you are on Ubuntu 20.04 OS):
+
+```
+alias ambf_simulator=~/ambf/bin/lin-x86_64/ambf_simulator
+```
+
+## Set up Surgical Simulation Environment
+
+### Clone the Repository
+
+```bash
+cd ~
+git clone https://github.com/surgical-robotics-ai/surgical_robotics_challenge.git
+```
+
+### Install the local package
+
+```bash
+cd ~/surgical_robotics_challenge/scripts
+pip3 install -e .
+```
+
+# Run Demonstrations
+
