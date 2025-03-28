@@ -60,6 +60,9 @@ pip3 install -e .
 
 # Run Demonstrations
 
+**Hint: If you want to reset the simulation without closing it, you can press `Ctrl+R`(Reset Rigid Bodies) 
+and then `Ctrl+V`(Reset the Camera)**
+
 Firstly, clone the repository:
 
 ```bash
